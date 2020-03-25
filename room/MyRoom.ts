@@ -95,6 +95,7 @@ export class MyRoom extends Room<State>{
           this.delayedInterval.clear();
         }
       }
+      
     }else if(message.command =="minushealt"){
       if(player.healt-1 == 0) {
         this.state.phase = "finished";
