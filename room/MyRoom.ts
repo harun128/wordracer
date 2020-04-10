@@ -14,6 +14,11 @@ export class MyRoom extends Room<State>{
   playerCount : number = 0;
   public delayedInterval!: Delayed;
 
+  uids: any = [ ];
+
+
+
+
   onCreate (options: any) {
     let state = new State();
     state.phase = "waiting";
@@ -39,14 +44,14 @@ export class MyRoom extends Room<State>{
     player.sessionId = client.sessionId;
     player.photo = oyuncu.avatarUrl;
     player.point = oyuncu.metadata.coins;
-    
-    
-    
-
-
 
     this.state.players[client.sessionId] = player;  
     
+    this.uids.push(player.userId.toString());
+    
+    console.log(this.uids.length);
+
+
 
     this.playerCount++;    
 
@@ -59,49 +64,71 @@ export class MyRoom extends Room<State>{
 
   onMessage (client: Client, message: any) {
     const player = this.state.players[client.sessionId];
+
+    console.log("işlem yapan: "+player.displayName);
+    
     //Kullanıcı tahmin et butonuna ilk bastığında
     if(message.command == "predicting"){
       this.state.playerTurn = player.userId;
       this.state.phase = "predicting";
-
+      
       //Timer tanımlıyoruz
       this.clock.start();      
       this.delayedInterval = this.clock.setInterval(() => {
-          this.state.time = this.state.time -1;        
-          if(this.state.time == 0) {
-            this.state.phase = "finished";
+          this.state.time -= 1;       
+          if(this.state.time == 0) {          
+            this.state.time =0;
+            this.state.phase = "finished";            
             this.state.losingPlayer = this.state.playerTurn;
+            this.state.winnigPlayer = (this.uids[0] == this.state.losingPlayer) ? this.uids[1] : this.uids[0];
+            console.log("winnig:"+ this.state.winnigPlayer+" Losing:"+this.state.losingPlayer);
           }
       }, 1000);
+
       this.clock.setTimeout(() => {
           this.delayedInterval.clear();
-      }, 25_000);
-
+      }, 11_000);
 
     }else if(message.command =="prediction" && this.state.phase == "predicting"){
       if(player.userId == this.state.playerTurn){
-        if(message.answer == this.state.answer) {
+        if(message.answer.toLowerCase() == this.state.answer.toLowerCase()) {
           this.state.phase = "finished";
           this.state.winnigPlayer = this.state.playerTurn;
           this.delayedInterval.clear();
+          this.state.losingPlayer = (this.uids[0] == this.state.winnigPlayer) ? this.uids[1] : this.uids[0];          
+          console.log("winnig:"+ this.state.winnigPlayer+" Losing:"+this.state.losingPlayer);
         } else {
           this.state.phase = "finished";
           this.state.losingPlayer = this.state.playerTurn;
-          this.state.players.array.forEach((element: Player) => {
-            if(element.userId != this.state.losingPlayer){
-              this.state.winnigPlayer = element.userId;
-            }
-          });
+          this.state.winnigPlayer = (this.uids[0] == this.state.losingPlayer) ? this.uids[1] : this.uids[0];
+          
           this.delayedInterval.clear();
         }
+      }      
+    }else if(message.command =="prediction" && this.state.phase != "finished"){
+      this.state.phase = "finished";
+      if(message.answer.toLowerCase() == this.state.answer.toLowerCase()) {        
+        this.state.winnigPlayer = player.userId;
+        this.state.losingPlayer = (this.uids[0] == this.state.winnigPlayer) ? this.uids[1] : this.uids[0];
+
+        
+      }else {
+        this.state.losingPlayer = player.userId;
+        this.state.winnigPlayer = (this.uids[0] == this.state.losingPlayer) ? this.uids[1] : this.uids[0];        
       }
-      
-    }else if(message.command =="minushealt"){
+
+    }else if(message.command =="minushealt" && this.state.phase != "finished"){
       if(player.healt-1 == 0) {
+        if((player.healt -1) >=0)
+          player.healt = player.healt -1;
         this.state.phase = "finished";
         this.state.losingPlayer = player.userId;
+        this.state.winnigPlayer = (this.uids[0] == this.state.losingPlayer) ? this.uids[1] : this.uids[0];
+
+        
       } else {
-        player.healt = player.healt -1;
+        if((player.healt -1) >=0)
+          player.healt = player.healt -1;
       }
       
     }     

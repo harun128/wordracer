@@ -1,4 +1,5 @@
 import http from "http";
+import * as mongoose from "mongoose";
 import express from "express";
 import cors from "cors";
 import { Server } from "colyseus";
@@ -8,8 +9,15 @@ import { hooks } from "./src";
 import { MyRoom } from "./room/MyRoom";
 import socialRoutesExpress from "./express";
 
+import Question from './my_models/Questions'
+import User from './src/models/User'
+
 const port = Number(process.env.PORT || 2567);
 const app = express()
+const uri: string = "mongodb://127.0.0.1:27017/wordracer";
+
+import * as QuestionController from './my_models/QuestionController'
+
 
 app.use(cors());
 app.use(express.json())
@@ -32,7 +40,18 @@ gameServer.define('my_room', MyRoom);
 
 // register colyseus monitor AFTER registering your room handlers
 //app.use("/colyseus", monitor());
+
+
+app.get("/questions", QuestionController.allQuestions);
+app.get("/question/:id", QuestionController.getQuestion);
+app.post("/question", QuestionController.addQuestion);
+app.put("/question/:id", QuestionController.updateQuestion);
+app.delete("/question/:id", QuestionController.deleteQuestion);
+
 app.use("/", socialRoutesExpress);
+
+
+
 
 hooks.beforeAuthenticate((provider, $setOnInsert, $set) => {
   // assign default metadata upon registration

@@ -11,19 +11,27 @@ public class State : Schema {
 	[Type(0, "string")]
 	public string phase = "";
 
-	[Type(1, "int16")]
-	public short playerTurn = 0;
+	[Type(1, "string")]
+	public string playerTurn = "";
 
 	[Type(2, "map", typeof(MapSchema<Player>))]
 	public MapSchema<Player> players = new MapSchema<Player>();
 
-	[Type(3, "int16")]
-	public short winnigPlayer = 0;
+	[Type(3, "string")]
+	public string winnigPlayer = "";
 
 	[Type(4, "string")]
-	public string question = "";
+	public string losingPlayer = "";
 
 	[Type(5, "string")]
+	public string question = "";
+
+	[Type(6, "string")]
 	public string answer = "";
+
+	[Type(7, "int16")]
+	public short time = 10;
+
+	
 }
 

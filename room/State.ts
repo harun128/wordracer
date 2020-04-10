@@ -44,6 +44,7 @@ export class State extends Schema {
     answer : string = "";
 
     @type('int16')
-    time : number = 25;
-
+    time : number = 10;
+    
+    
 }
