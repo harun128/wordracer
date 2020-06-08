@@ -1,6 +1,4 @@
 import {Schema , type, MapSchema, ArraySchema} from "@colyseus/schema";
-
-
 export class Player extends Schema {
     @type('string')
     userId: string ;
@@ -20,7 +18,6 @@ export class Player extends Schema {
     @type('uint32')
     point : number;
 }
-
 export class State extends Schema {
     @type('string')
     phase: string = "waiting";
@@ -44,7 +41,5 @@ export class State extends Schema {
     answer : string = "";
 
     @type('int16')
-    time : number = 10;
-    
-    
+    time : number = 10;      
 }

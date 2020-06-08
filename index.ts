@@ -78,3 +78,4 @@ app.use("/colyseus", basicAuthMiddleware, monitor());
 gameServer.listen(port);
 
 console.log(`Listening on ws://localhost:${ port }`)
+

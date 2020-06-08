@@ -2,56 +2,44 @@ import { Room, Client, Delayed } from "colyseus";
 import { State, Player} from "./state";
 
 import { connectDatabase, User } from "../src";
+import Question from './../my_models/Questions';
 
-
-
-export class MyRoom extends Room<State>{
-  
+export class MyRoom extends Room<State>{  
   maxClients = 2;
-
   
-
   playerCount : number = 0;
   public delayedInterval!: Delayed;
-
   uids: any = [ ];
-
-
-
 
   onCreate (options: any) {
     let state = new State();
     state.phase = "waiting";
-    state.question = "Türkiyenin başkenti neresidir";
-    state.answer = "Ankara";
+    const q =  Question.aggregate([{ $sample: { size: 1 } }]).then(function(data) {
+      state.question = data[0].question;
+      state.answer = data[0].answer;
+    });    
     state.playerTurn = "";
     state.winnigPlayer = "";
     state.losingPlayer = "";
     this.setState(state);
     connectDatabase();
-
   }
 
   async onJoin (client: Client, options: any)  {
-    console.log("client joined", client.sessionId);
-    console.log(options);
+    //console.log("client joined", client.sessionId);
+    //console.log(options);
     let player : Player = new Player();
-    const oyuncu = await User.findOne({_id:options.userId},["_id","displayName","avatarUrl","metadata"]);
-  
+    const oyuncu = await User.findOne({_id:options.userId},["_id","displayName","avatarUrl","metadata"]);    
     player.healt = 5;
     player.displayName = oyuncu.displayName;
     player.userId = Object(oyuncu._id).toString();    
     player.sessionId = client.sessionId;
     player.photo = oyuncu.avatarUrl;
     player.point = oyuncu.metadata.coins;
-
-    this.state.players[client.sessionId] = player;  
-    
+    this.state.players[client.sessionId] = player;      
     this.uids.push(player.userId.toString());
     
-    console.log(this.uids.length);
-
-
+    //console.log(this.uids.length);
 
     this.playerCount++;    
 
@@ -64,14 +52,11 @@ export class MyRoom extends Room<State>{
 
   onMessage (client: Client, message: any) {
     const player = this.state.players[client.sessionId];
-
-    console.log("işlem yapan: "+player.displayName);
-    
+    //console.log("işlem yapan: "+player.displayName);    
     //Kullanıcı tahmin et butonuna ilk bastığında
     if(message.command == "predicting"){
       this.state.playerTurn = player.userId;
-      this.state.phase = "predicting";
-      
+      this.state.phase = "predicting";      
       //Timer tanımlıyoruz
       this.clock.start();      
       this.delayedInterval = this.clock.setInterval(() => {
@@ -81,7 +66,7 @@ export class MyRoom extends Room<State>{
             this.state.phase = "finished";            
             this.state.losingPlayer = this.state.playerTurn;
             this.state.winnigPlayer = (this.uids[0] == this.state.losingPlayer) ? this.uids[1] : this.uids[0];
-            console.log("winnig:"+ this.state.winnigPlayer+" Losing:"+this.state.losingPlayer);
+            //console.log("winnig:"+ this.state.winnigPlayer+" Losing:"+this.state.losingPlayer);
           }
       }, 1000);
 
@@ -100,8 +85,7 @@ export class MyRoom extends Room<State>{
         } else {
           this.state.phase = "finished";
           this.state.losingPlayer = this.state.playerTurn;
-          this.state.winnigPlayer = (this.uids[0] == this.state.losingPlayer) ? this.uids[1] : this.uids[0];
-          
+          this.state.winnigPlayer = (this.uids[0] == this.state.losingPlayer) ? this.uids[1] : this.uids[0];          
           this.delayedInterval.clear();
         }
       }      
@@ -124,13 +108,11 @@ export class MyRoom extends Room<State>{
         this.state.phase = "finished";
         this.state.losingPlayer = player.userId;
         this.state.winnigPlayer = (this.uids[0] == this.state.losingPlayer) ? this.uids[1] : this.uids[0];
-
         
       } else {
         if((player.healt -1) >=0)
           player.healt = player.healt -1;
-      }
-      
+      }      
     }     
   }
 
@@ -140,11 +122,15 @@ export class MyRoom extends Room<State>{
     this.playerCount--;
     this.disconnect();
     this.state.phase = "errorConnecting";
-    console.log("oyun bitmiştir");
+    console.log("oyun bitmiştir");    
   }
 
   onDispose() {
   
+  }
+
+  finishGame(){
+     
   }
 
 }
