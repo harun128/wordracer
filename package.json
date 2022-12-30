@@ -15,7 +15,7 @@
   "dependencies": {
     "@colyseus/monitor": "^0.12.1",
     "@colyseus/social": "^0.11.6",
-    "colyseus": "^0.12.4",
+    "colyseus": "^0.14.24",
     "cookie-parser": "^1.4.4",
     "cors": "^2.8.5",
     "express": "^4.14.0",
